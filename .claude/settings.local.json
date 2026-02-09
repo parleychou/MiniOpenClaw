@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(./venv/Scripts/python.exe -m pip:*)",
+      "Bash(timeout 5 ./venv/Scripts/python.exe:*)",
+      "Bash(curl:*)",
+      "Bash(timeout 3 ./venv/Scripts/python.exe:*)",
+      "Bash(./venv/Scripts/python.exe:*)",
+      "Bash(netstat:*)",
+      "Bash(taskkill:*)"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+# requirements.txt
+flask>=3.0.0
+requests>=2.31.0
+pyyaml>=6.0.1
+pywinpty>=2.0.12
+websockets>=12.0
+cryptography>=41.0.0
+colorama>=0.4.6
+watchdog>=3.0.0
+python-dotenv>=1.0.0
+pyautocad>=0.2.0
+pywin32>=306

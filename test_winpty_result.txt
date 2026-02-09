@@ -1,0 +1,10 @@
+﻿python : Traceback (most recent call last):
+所在位置 行:1 字符: 1
++ python test_fixed_winpty.py 2>&1 | Out-File -FilePath test_winpty_res ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "E:\2026\20260207_01feishu2claudecode\test_fixed_winpty.py", line 8, in <module>
+    print("\U0001f50d 测试修复后的 WinPTY 管理器")
+UnicodeEncodeError: 'gbk' codec can't encode character '\U0001f50d' in position 0: illegal multibyte sequence
