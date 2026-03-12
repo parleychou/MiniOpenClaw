@@ -50,3 +50,4 @@ Thumbs.db
 nul
 *.tmp
 *.bak
+.worktrees/
