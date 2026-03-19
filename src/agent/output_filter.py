@@ -47,6 +47,9 @@ class OutputFilter:
         self._last_activity = time.time()
         self._accumulated_output: deque = deque(maxlen=200)
 
+        # 是否只在完成时发送（过滤思考过程）
+        self._only_send_on_completion = self.config.get('only_send_on_completion', False)
+
         # 消息去重
         self._last_sent_messages: deque = deque(maxlen=20)  # 保存最近发送的20条消息（增加窗口）
         self._similarity_threshold = config.get('dedup_similarity_threshold', 0.50)  # 相似度阈值（50%以上认为重复）
@@ -162,6 +165,11 @@ class OutputFilter:
             with self._buffer_lock:
                 self._buffer.append(line)
             self._schedule_flush("progress")
+            return
+
+        # 如果开启了"仅完成时发送"模式，跳过普通消息
+        if self._only_send_on_completion:
+            logger.debug(f"[FILTER] [COMPLETION_MODE] 跳过普通消息: {line[:50]}")
             return
 
         # 默认：所有非忽略的内容都加入缓冲并转发
