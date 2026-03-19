@@ -122,6 +122,9 @@ class AgentBridgeService:
         # 设置监控告警回调
         self.monitor.set_alert_callback(self.feishu_bot.send_text)
 
+        # 设置会话管理器的飞书回调（用于agent输出）
+        self.session_manager.set_feishu_callback(self.feishu_bot._on_agent_output)
+
         # 5. 启动飞书事件监听
         feishu_thread = threading.Thread(target=self.feishu_bot.start, daemon=True)
         feishu_thread.start()

@@ -17,7 +17,7 @@ class SessionManager:
         user_id -> UserSessionPool -> sessions[session_id] -> AgentSession
     """
 
-    def __init__(self, template_registry, agent_factory: Callable, store=None):
+    def __init__(self, template_registry, agent_factory: Callable, store=None, feishu_callback=None):
         """
         Initialize SessionManager.
 
@@ -26,8 +26,11 @@ class SessionManager:
             agent_factory: Callable that creates agent instances
                 Signature: (config, output_filter_config) -> Agent
             store: Optional storage backend for persistence
+            feishu_callback: Optional callback for sending output to Feishu
+                Signature: (message, msg_type) -> None
         """
         self.template_registry = template_registry
+        self._feishu_callback = feishu_callback
         self.agent_factory = agent_factory
         self.store = store
         # user_id -> {"sessions": {session_id: AgentSession}, "active_session_id": str}
@@ -87,6 +90,11 @@ class SessionManager:
 
         # Create and start agent using factory
         session.agent = self.agent_factory(agent_config, None)
+
+        # Set feishu callback if available
+        if self._feishu_callback and hasattr(session.agent, 'set_feishu_callback'):
+            session.agent.set_feishu_callback(self._feishu_callback)
+
         if hasattr(session.agent, 'start'):
             session.agent.start()
 
@@ -314,3 +322,17 @@ class SessionManager:
                 for s in pool["sessions"].values()
             ],
         }
+
+    def set_feishu_callback(self, callback):
+        """
+        Set the feishu callback for all existing and future session agents.
+
+        Args:
+            callback: Callback function (message, msg_type) -> None
+        """
+        self._feishu_callback = callback
+        # Set callback on all existing agents
+        for pool in self._pools.values():
+            for session in pool["sessions"].values():
+                if session.agent and hasattr(session.agent, 'set_feishu_callback'):
+                    session.agent.set_feishu_callback(callback)
