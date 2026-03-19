@@ -40,12 +40,16 @@ class OutputFilter:
         self._buffer: List[str] = []
         self._buffer_lock = threading.Lock()
         self._flush_timer: Optional[threading.Timer] = None
-        self._flush_interval = 2.0  # 缓冲聚合间隔（秒）
 
         # 状态跟踪
         self._state = "idle"  # idle, processing, waiting_confirm, completed
         self._last_activity = time.time()
         self._accumulated_output: deque = deque(maxlen=200)
+
+        # 交互模式配置
+        self._confirm_flush_interval = 3.0  # 等待确认时的定期刷新间隔（秒）
+        self._idle_flush_interval = 5.0  # 空闲时的刷新间隔（秒）
+        self._interactive_mode = False  # 是否处于交互模式（等待用户输入）
 
         # 是否只在完成时发送（过滤思考过程）
         self._only_send_on_completion = self.config.get('only_send_on_completion', False)
@@ -140,10 +144,13 @@ class OutputFilter:
         logger.debug(f"[FILTER] 分类: {msg_type}, 内容: {line[:50]}")
 
         if msg_type == "confirm":
-            # 确认请求立即转发
+            # 确认请求立即转发，并进入交互模式
             self._flush_buffer()
             self._state = "waiting_confirm"
+            self._interactive_mode = True
             self._forward_immediate(line, "confirm")
+            # 启动定期刷新计时器，每3秒发送一次累积的输出
+            self._start_confirm_flush_timer()
             return
 
         if msg_type == "error":
@@ -472,29 +479,35 @@ class OutputFilter:
 
     def _schedule_flush(self, msg_type: str):
         """调度缓冲刷新（智能策略：累积更多行或立即刷新）"""
-        logger.debug(f"[FLUSH] 调度刷新，类型: {msg_type}, 间隔: {self._flush_interval}秒")
-        
+        # 交互模式下（等待确认），使用较短的3秒间隔定期发送进度
+        if self._interactive_mode:
+            interval = self._confirm_flush_interval
+            logger.debug(f"[FLUSH] 交互模式，使用 {interval}秒 间隔")
+        else:
+            interval = self._idle_flush_interval
+
+        logger.debug(f"[FLUSH] 调度刷新，类型: {msg_type}, 间隔: {interval}秒")
+
         # 取消现有的定时器
         if self._flush_timer:
             self._flush_timer.cancel()
-        
+
         # 检查缓冲区大小
         with self._buffer_lock:
             buffer_size = len(self._buffer)
-        
+
         # 如果缓冲区已经很大（超过50行），立即刷新以进行去重
         if buffer_size >= 50:
             logger.info(f"[FLUSH] 缓冲区已满（{buffer_size}行），立即刷新")
             self._flush_buffer(msg_type)
             return
-        
+
         # 对于 confirm 和 error，使用短间隔（立即响应）
         if msg_type in ["confirm", "error"]:
             flush_interval = 0.5
-        # 对于其他类型，使用较长间隔（5秒）以累积更多行进行去重
         else:
-            flush_interval = 5.0
-        
+            flush_interval = interval
+
         logger.debug(f"[FLUSH] 使用 {flush_interval}秒 间隔（缓冲区: {buffer_size}行）")
         self._flush_timer = threading.Timer(
             flush_interval,
@@ -503,6 +516,45 @@ class OutputFilter:
         )
         self._flush_timer.daemon = True
         self._flush_timer.start()
+
+    def _start_confirm_flush_timer(self):
+        """启动等待确认时的定期刷新计时器，每3秒发送一次累积输出"""
+        # 取消现有的定时器
+        if self._flush_timer:
+            self._flush_timer.cancel()
+
+        def periodic_flush():
+            if self._interactive_mode and self._state == "waiting_confirm":
+                logger.info("[FLUSH] [INTERACTIVE] 定期刷新等待确认时的累积输出")
+                self._flush_buffer("progress")
+                # 继续调度下一次定期刷新
+                self._confirm_timer = threading.Timer(
+                    self._confirm_flush_interval,
+                    periodic_flush
+                )
+                self._confirm_timer.daemon = True
+                self._confirm_timer.start()
+
+        self._confirm_timer = threading.Timer(
+            self._confirm_flush_interval,
+            periodic_flush
+        )
+        self._confirm_timer.daemon = True
+        self._confirm_timer.start()
+        logger.info(f"[FLUSH] [INTERACTIVE] 启动定期刷新计时器（{self._confirm_flush_interval}秒间隔）")
+
+    def exit_interactive_mode(self):
+        """退出交互模式，用户已发送输入"""
+        if self._interactive_mode:
+            logger.info("[FLUSH] [INTERACTIVE] 用户已输入，退出交互模式")
+            self._interactive_mode = False
+            self._state = "processing"
+            # 取消定期刷新计时器
+            if hasattr(self, '_confirm_timer') and self._confirm_timer:
+                self._confirm_timer.cancel()
+                self._confirm_timer = None
+            # 刷新缓冲区
+            self._flush_buffer("info")
 
     def _flush_buffer(self, msg_type: str = "info"):
         """刷新缓冲并转发（增强去重逻辑）"""
@@ -586,6 +638,11 @@ class OutputFilter:
 
     def reset_state(self, state: str = "idle"):
         """重置状态"""
+        self._interactive_mode = False
         self._state = state
+        # 取消定期刷新计时器
+        if hasattr(self, '_confirm_timer') and self._confirm_timer:
+            self._confirm_timer.cancel()
+            self._confirm_timer = None
         with self._buffer_lock:
             self._buffer.clear()

@@ -97,6 +97,8 @@ class BaseAgent(ABC):
             self._command_count += 1
             self._pty.send_input(text)
             if self._output_filter:
+                # 退出交互模式，用户已发送输入
+                self._output_filter.exit_interactive_mode()
                 self._output_filter.reset_state("processing")
 
     def is_running(self) -> bool:
