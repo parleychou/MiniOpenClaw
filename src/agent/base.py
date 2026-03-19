@@ -67,15 +67,13 @@ class BaseAgent(ABC):
             
             # 等待初始化完成
             time.sleep(2)
-            
+
             # 自动处理 Claude Code 的确认提示
             if 'claude' in self.command.lower():
                 self.logger.info("[AUTO] 检测到 Claude Code，自动发送确认...")
-                # 发送 Down 箭头键选择 "Yes, I accept"
+                # 直接发送 Enter 选择默认的 "Yes, I accept"
                 if hasattr(self._pty, '_pty') and self._pty._pty:
-                    self._pty._pty.write('\x1b[B')  # Down arrow
-                    time.sleep(0.5)
-                    self._pty._pty.write('\r')  # Enter
+                    self._pty._pty.write('\r')  # Enter (默认选择 Yes)
                     self.logger.info("[AUTO] 已发送确认，等待 Claude Code 启动...")
                     time.sleep(3)
         else:
