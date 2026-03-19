@@ -22,10 +22,14 @@ class MessageHandler:
         '取消': 'n',
         '状态': '/status',
         '帮助': '/help',
-        '切换': '/switch',
         '重启': '/restart',
         '停止': '/stop',
     }
+
+    # @sid: directed message pattern
+    DIRECTED_SESSION_PATTERN = re.compile(
+        r'^@sid:(?P<session_id>[A-Za-z0-9_-]+)\s+(?P<content>.+)$'
+    )
 
     @classmethod
     def parse_message(cls, text: str) -> dict:
@@ -40,8 +44,27 @@ class MessageHandler:
         """
         text = text.strip()
 
-        # 去除飞书@机器人的文本
-        text = re.sub(r'@\w+\s*', '', text).strip()
+        # 首先检查原始文本中是否有 @sid: 模式
+        directed_match = cls.DIRECTED_SESSION_PATTERN.match(text)
+        if directed_match:
+            return {
+                "type": "agent_input",
+                "content": directed_match.group("content").strip(),
+                "metadata": {"session_id": directed_match.group("session_id")},
+            }
+
+        # 去除飞书@机器人的文本（但保留@sid:模式 - 使用负向预查）
+        # Pattern matches @xxx where xxx is NOT "sid"
+        text = re.sub(r'@(?!sid:)(\w+)\s*', '', text).strip()
+
+        # 去除后再次检查是否有 @sid: 模式
+        directed_match = cls.DIRECTED_SESSION_PATTERN.match(text)
+        if directed_match:
+            return {
+                "type": "agent_input",
+                "content": directed_match.group("content").strip(),
+                "metadata": {"session_id": directed_match.group("session_id")},
+            }
 
         # 快捷命令
         lower_text = text.lower()
