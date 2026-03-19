@@ -270,12 +270,16 @@ class AgentBridgeService:
         sub_cmd = parts[1].lower()
 
         if sub_cmd == "new":
-            if len(parts) < 4:
-                self.feishu_bot.send_text("[!] 用法: /session new <模板> <路径> [名称]")
-                return
-            template_name = parts[2]
-            work_dir = parts[3]
-            session_name = parts[4] if len(parts) >= 5 else template_name
+            # Default values
+            default_template = "claude_code"
+            import os
+            default_work_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            import time
+            default_session_name = f"session_{int(time.time())}"
+
+            template_name = parts[2] if len(parts) >= 3 else default_template
+            work_dir = parts[3] if len(parts) >= 4 else default_work_dir
+            session_name = parts[4] if len(parts) >= 5 else default_session_name
 
             # 验证模板存在
             if not self.template_registry.get_template(template_name):

@@ -1,5 +1,34 @@
 import pytest
 from session.manager import SessionManager, AgentSession
+from agent.template_registry import TemplateRegistry
+
+
+def create_test_registry():
+    """Create a TemplateRegistry for testing."""
+    return TemplateRegistry(
+        templates={
+            "claude_code": {
+                "command": "claude",
+                "args": ["code"],
+                "env": {},
+                "append_prompt_as_stdin": True,
+            },
+            "opencode": {
+                "command": "opencode",
+                "args": [],
+                "env": {},
+                "append_prompt_as_stdin": True,
+            },
+            "codex": {
+                "command": "codex",
+                "args": [],
+                "env": {},
+                "append_prompt_as_stdin": True,
+            },
+        },
+        allowed_work_roots=[r"E:\2026"],
+        max_sessions_per_user=5,
+    )
 
 
 class FakeAgent:
@@ -29,7 +58,7 @@ class FakeAgent:
 def test_user_sessions_are_isolated():
     """Test that sessions are isolated by user_id."""
     manager = SessionManager(
-        template_registry=object(),
+        template_registry=create_test_registry(),
         agent_factory=lambda config, filter_config: FakeAgent(),
         store=None,
     )
@@ -48,7 +77,7 @@ def test_user_sessions_are_isolated():
 def test_create_session_sets_status():
     """Test that created session has correct status."""
     manager = SessionManager(
-        template_registry=object(),
+        template_registry=create_test_registry(),
         agent_factory=lambda config, filter_config: FakeAgent(),
         store=None,
     )
@@ -65,7 +94,7 @@ def test_create_session_sets_status():
 def test_set_active_session():
     """Test setting active session."""
     manager = SessionManager(
-        template_registry=object(),
+        template_registry=create_test_registry(),
         agent_factory=lambda config, filter_config: FakeAgent(),
         store=None,
     )
@@ -85,7 +114,7 @@ def test_set_active_session():
 def test_send_to_active_session():
     """Test sending message to active session."""
     manager = SessionManager(
-        template_registry=object(),
+        template_registry=create_test_registry(),
         agent_factory=lambda config, filter_config: FakeAgent(),
         store=None,
     )
@@ -103,7 +132,7 @@ def test_send_to_active_session():
 def test_list_sessions():
     """Test listing sessions for a user."""
     manager = SessionManager(
-        template_registry=object(),
+        template_registry=create_test_registry(),
         agent_factory=lambda config, filter_config: FakeAgent(),
         store=None,
     )

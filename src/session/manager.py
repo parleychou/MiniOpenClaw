@@ -68,9 +68,25 @@ class SessionManager:
             status="running",
         )
 
+        # Build launch spec from template
+        launch_spec = self.template_registry.build_launch_spec(
+            template_name=template_name,
+            user_id=user_id,
+            session_id=session_id,
+            session_name=session_name,
+            work_dir=work_dir,
+        )
+
+        # Convert LaunchSpec to config dict for CommandAgent
+        agent_config = {
+            "command": launch_spec.command,
+            "args": launch_spec.args,
+            "work_dir": work_dir,
+            "env": launch_spec.env,
+        }
+
         # Create and start agent using factory
-        # Pass None for config since we're using template-based creation
-        session.agent = self.agent_factory(None, None)
+        session.agent = self.agent_factory(agent_config, None)
         if hasattr(session.agent, 'start'):
             session.agent.start()
 
