@@ -1,61 +1,62 @@
 @echo off
-REM start.bat - Windows启动脚本
-chcp 65001 >nul
-title 飞书 Agent Bridge 服务
+REM Feishu Agent Bridge Startup Script
+chcp 65001 >nul 2>&1
+title Feishu Agent Bridge
 
 echo ============================================
-echo   飞书 Agent Bridge 服务启动器
+echo   Feishu Agent Bridge Service
 echo ============================================
 echo.
 
-REM 检查Python
+REM Check Python
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo [错误] 未找到Python，请先安装Python 3.10+
+    echo [ERROR] Python not found. Please install Python 3.10+
     pause
     exit /b 1
 )
 
-REM 检查虚拟环境
+REM Check virtual environment
 if not exist "venv" (
-    echo [INFO] 创建虚拟环境...
+    echo [INFO] Creating virtual environment...
     python -m venv venv
 )
 
-REM 激活虚拟环境
+REM Activate virtual environment
 call venv\Scripts\activate.bat
 
-REM 安装依赖
+REM Install dependencies
 if exist "requirements.txt" (
-    echo [INFO] 检查依赖...
+    echo [INFO] Checking dependencies...
     pip install -r requirements.txt -q
 )
 
-REM 检查配置文件
+REM Check config file
 if not exist "config\config.yaml" (
-    echo [错误] 配置文件不存在: config\config.yaml
-    echo 请复制 config\config.yaml.example 并填写配置
+    echo [ERROR] Config file not found: config\config.yaml
+    echo Please copy config\config.yaml.example to config\config.yaml
     pause
     exit /b 1
 )
 
-REM 检查Claude Code或OpenCode是否可用
+REM Check Claude Code
 claude --version >nul 2>&1
 if errorlevel 1 (
-    echo [警告] Claude Code CLI 未找到
+    echo [WARN] Claude Code CLI not found
 ) else (
-    echo [OK] Claude Code CLI 可用
+    echo [OK] Claude Code CLI found
 )
 
+REM Check OpenCode
 opencode --version >nul 2>&1
 if errorlevel 1 (
-    echo [警告] OpenCode CLI 未找到
+    echo [WARN] OpenCode CLI not found
 ) else (
-    echo [OK] OpenCode CLI 可用
+    echo [OK] OpenCode CLI found
 )
 
 echo.
-echo [INFO] 启动服务...
+echo [INFO] Starting service...
 echo.
 
 python src\main.py %*
