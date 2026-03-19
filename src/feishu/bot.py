@@ -258,7 +258,7 @@ class FeishuBot:
             
             # 调用消息处理器
             if self.on_message:
-                self.on_message(sender_id, text)
+                self.on_message(sender_id, text, chat_id)
                 
         except Exception as e:
             logger.error(f"[LARK] 处理消息失败: {e}")
@@ -324,7 +324,7 @@ class FeishuBot:
                     # 异步处理消息
                     threading.Thread(
                         target=self.on_message,
-                        args=(sender_id, text),
+                        args=(sender_id, text, chat_id),
                         daemon=True
                     ).start()
             else:

@@ -142,9 +142,13 @@ class AgentBridgeService:
         # 7. 控制台输入循环
         self._console_loop()
 
-    def _handle_feishu_message(self, user_id: str, message: str):
+    def _handle_feishu_message(self, user_id: str, message: str, chat_id: str = None):
         """处理来自飞书的消息"""
         logger.info(f"收到飞书消息 [{user_id}]: {message}")
+
+        # 如果提供了 chat_id，存储它用于回复
+        if chat_id:
+            self.feishu_bot._current_chat_id = chat_id
 
         # 使用 MessageHandler 解析消息
         parsed = MessageHandler.parse_message(message)
