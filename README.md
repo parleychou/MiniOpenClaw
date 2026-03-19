@@ -628,6 +628,36 @@ black src/
 
 MIT License
 
+### 验证说明
+
+**已验证命令：**
+
+| 命令 | 说明 |
+|------|------|
+| `/template list` | 列出所有可用模板 |
+| `/template show <名称>` | 显示模板详情 |
+| `/session new <模板> <路径> [名称]` | 创建新会话 |
+| `/session list` | 列出用户所有会话 |
+| `/session use <会话ID>` | 切换活动会话 |
+| `/session info <会话ID>` | 显示会话详情 |
+| `/session stop <会话ID>` | 停止会话 |
+| `/session restart <会话ID>` | 重启会话 |
+| `/session rm <会话ID>` | 删除会话 |
+| `@sid:<会话ID> <消息>` | 向指定会话发送消息 |
+| `/status` | 显示会话池状态 |
+| `/help` | 显示帮助信息 |
+
+**目录白名单限制：**
+
+- 工作目录必须在 `allowed_work_roots` 配置的范围内
+- 尝试使用不在白名单的路径将返回错误
+- 服务启动时需配置有效的模板和路径
+
+**会话持久化：**
+
+- 会话元数据保存在 `data/sessions.json`
+- 服务重启后可通过 `/session list` 查看历史会话状态（需重新启动 agent 进程）
+
 ### 贡献
 
 欢迎提交 Issue 和 Pull Request！
