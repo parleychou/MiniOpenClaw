@@ -3,6 +3,10 @@ REM Feishu Agent Bridge Startup Script
 chcp 65001 >nul 2>&1
 title Feishu Agent Bridge
 
+REM Get the directory where the script is located
+set SCRIPT_DIR=%~dp0
+cd /d "%SCRIPT_DIR%"
+
 echo ============================================
 echo   Feishu Agent Bridge Service
 echo ============================================
@@ -31,9 +35,17 @@ if exist "requirements.txt" (
     pip install -r requirements.txt -q
 )
 
-REM Check config file
-if not exist "config\config.yaml" (
-    echo [ERROR] Config file not found: config\config.yaml
+REM Check config file (support both .yaml and .yml)
+set CONFIG_FOUND=0
+if exist "config\config.yaml" (
+    set CONFIG_FOUND=1
+)
+if exist "config\config.yml" (
+    set CONFIG_FOUND=1
+)
+
+if "%CONFIG_FOUND%"=="0" (
+    echo [ERROR] Config file not found: config\config.yaml or config\config.yml
     echo Please copy config\config.yaml.example to config\config.yaml
     pause
     exit /b 1
