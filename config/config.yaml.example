@@ -27,20 +27,48 @@ feishu:
 agent:
   # Default agent to use: claude_code or opencode
   default: "claude_code"
-  
-  claude_code:
+
+  # Session management settings
+  default_timeout: 30  # Default command timeout in seconds
+  max_sessions_per_user: 5  # Maximum concurrent sessions per user
+  allowed_work_roots:  # Whitelist of allowed working directory roots
+    - "E:\\2026"
+    - "D:\\workspace"
+
+  # CLI Templates (used by session-based agent management)
+  templates:
+    claude_code:
+      command: "claude"
+      args: ["code"]
+      env: {}
+      append_prompt_as_stdin: true
+
+    opencode:
+      command: "opencode"
+      args: []
+      env: {}
+      append_prompt_as_stdin: true
+
+    codex:
+      command: "codex"
+      args: []
+      env: {}
+      append_prompt_as_stdin: true
+
+  # Legacy agent configuration (for backward compatibility)
+  claude_code_legacy:
     # Claude Code CLI command path
     # Windows: Usually at C:/Users/YourName/AppData/Roaming/npm/claude.cmd
     # Linux/Mac: Usually at /usr/local/bin/claude or ~/.local/bin/claude
     command: "claude"
-    
+
     # Working directory - Agent will execute operations in this directory
     work_dir: "D:/projects/my-project"
-    
+
     # Startup arguments
     args: ["--dangerously-skip-permissions"]
-  
-  opencode:
+
+  opencode_legacy:
     # OpenCode CLI command path
     command: "opencode"
     work_dir: "D:/projects/my-project"
