@@ -87,6 +87,9 @@ class BaseAgent(ABC):
         """原始输出处理"""
         if self._output_filter:
             self._output_filter.process_line(line)
+        else:
+            # 如果没有过滤器，直接调用回调并打印到控制台
+            self._on_filtered_output(line, "text")
         # 控制台也显示
         print(f"  {line}")
 
