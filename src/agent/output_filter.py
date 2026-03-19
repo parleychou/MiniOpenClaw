@@ -18,22 +18,22 @@ class OutputFilter:
     def __init__(self, config: dict, forward_callback: Callable[[str, str], None]):
         """
         Args:
-            config: 过滤器配置
+            config: 过滤器配置 (可以是 None)
             forward_callback: 转发回调 (message, msg_type)
                 msg_type: "confirm" | "result" | "error" | "info" | "progress"
         """
-        self.config = config
+        self.config = config or {}
         self.forward_callback = forward_callback
-        self.max_length = config.get('max_message_length', 2000)
+        self.max_length = self.config.get('max_message_length', 2000)
 
         # 编译正则模式
         self.forward_patterns = [
             re.compile(p, re.IGNORECASE)
-            for p in config.get('forward_patterns', [])
+            for p in self.config.get('forward_patterns', [])
         ]
         self.ignore_patterns = [
             re.compile(p)
-            for p in config.get('ignore_patterns', [])
+            for p in self.config.get('ignore_patterns', [])
         ]
 
         # 输出缓冲（用于聚合连续输出）

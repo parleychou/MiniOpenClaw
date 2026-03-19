@@ -34,9 +34,9 @@ class BaseAgent(ABC):
 
     def _on_filtered_output(self, message: str, msg_type: str):
         """过滤后的输出回调"""
-        self.logger.debug(f"[CALLBACK] _feishu_callback 是否设置: {self._feishu_callback is not None}")
+        self.logger.info(f"[CALLBACK] _feishu_callback 是否设置: {self._feishu_callback is not None}")
         if self._feishu_callback:
-            self.logger.debug(f"[CALLBACK] 调用 _feishu_callback")
+            self.logger.info(f"[CALLBACK] 调用 _feishu_callback，消息: {message[:50]}...")
             self._feishu_callback(message, msg_type)
         else:
             self.logger.warning(f"[CALLBACK] _feishu_callback 未设置，无法发送消息")
