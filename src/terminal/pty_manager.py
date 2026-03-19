@@ -17,10 +17,11 @@ class PTYManager:
     使用 winpty 或 subprocess 管理交互式CLI进程
     """
 
-    def __init__(self, command: str, args: list = None, work_dir: str = None):
+    def __init__(self, command: str, args: list = None, work_dir: str = None, extra_env: dict = None):
         self.command = command
         self.args = args or []
         self.work_dir = work_dir or os.getcwd()
+        self.extra_env = extra_env or {}
         self.process: Optional[subprocess.Popen] = None
         self._output_callback: Optional[Callable] = None
         self._reader_thread: Optional[threading.Thread] = None
@@ -56,15 +57,18 @@ class PTYManager:
 
             # Windows 上使用 subprocess + PIPE 模拟交互
             env = os.environ.copy()
-            
+
             # 移除可能干扰 Claude Code 的环境变量
             for key in ['TERM', 'NO_COLOR', 'FORCE_COLOR']:
                 env.pop(key, None)
-            
+
             # 添加 Python 无缓冲模式
             env['PYTHONUNBUFFERED'] = '1'
-            
-            logger.info(f"[ENV] 环境变量已配置: PYTHONUNBUFFERED=1")
+
+            # 合并额外的环境变量
+            env.update(self.extra_env)
+
+            logger.info(f"[ENV] 环境变量已配置: PYTHONUNBUFFERED=1, extra_env={self.extra_env}")
             
             self.process = subprocess.Popen(
                 cmd,

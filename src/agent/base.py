@@ -45,12 +45,15 @@ class BaseAgent(ABC):
 
     def start(self) -> bool:
         """启动Agent"""
+        # 获取额外环境变量（子类可覆盖）
+        extra_env = getattr(self, 'extra_env', {})
+
         # 在 Windows 上优先使用 WinPTYManager（提供真实的 PTY）
         import sys
         if sys.platform == 'win32':
-            pty_manager = WinPTYManager(self.command, self.args, self.work_dir)
+            pty_manager = WinPTYManager(self.command, self.args, self.work_dir, extra_env)
         else:
-            pty_manager = PTYManager(self.command, self.args, self.work_dir)
+            pty_manager = PTYManager(self.command, self.args, self.work_dir, extra_env)
         
         pty_manager.set_output_callback(self._on_raw_output)
 
