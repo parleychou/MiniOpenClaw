@@ -128,3 +128,24 @@ class ChatStore:
             "first_message": messages[0]["timestamp"],
             "last_message": messages[-1]["timestamp"]
         }
+
+    def save_session_record(self, record: dict):
+        """保存会话元数据记录"""
+        path = os.path.join(self.storage_dir, "sessions.json")
+        records = self.load_session_records()
+        # Replace existing record with same session_id, or append
+        existing = [item for item in records if item.get("session_id") != record.get("session_id")]
+        existing.append(record)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(existing, f, ensure_ascii=False, indent=2)
+
+    def load_session_records(self) -> List[dict]:
+        """加载会话元数据记录"""
+        path = os.path.join(self.storage_dir, "sessions.json")
+        if not os.path.exists(path):
+            return []
+        try:
+            with open(path, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except (json.JSONDecodeError, IOError):
+            return []

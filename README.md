@@ -24,6 +24,7 @@ Feishu Agent Bridge is a service that connects Feishu (Lark) bots with AI coding
 - 📱 **Web Dashboard** - Real-time chat history and statistics
 - 💾 **Chat History Storage** - Automatic conversation logging
 - 🔌 **Dual Connection Modes** - WebSocket (long connection) or Webhook callback
+- 🏢 **Multi-Session Per User** - Each user can have multiple independent sessions with different templates
 
 ### Architecture
 
@@ -151,11 +152,26 @@ Bot: ✅ Result
 
 #### System Commands
 
-- `/status` - View agent status
-- `/switch` - Switch agent (Claude Code ↔ OpenCode)
-- `/restart` - Restart current agent
+**Session Commands:**
+- `/session new <模板> <路径> [名称]` - Create a new session
+- `/session list` - List all sessions
+- `/session use <会话ID>` - Switch active session
+- `/session info <会话ID>` - Show session details
+- `/session stop <会话ID>` - Stop a session
+- `/session restart <会话ID>` - Restart a session
+- `/session rm <会话ID>` - Delete a session
+
+**Template Commands:**
+- `/template list` - List available templates
+- `/template show <名称>` - Show template details
+
+**General Commands:**
+- `/status` - View current status
 - `/stop` - Stop service
 - `/help` - Show help information
+
+**Directed Messages:**
+- `@sid:<会话ID> <消息>` - Send message to a specific session (bypasses active session)
 
 #### Web Dashboard
 
@@ -173,24 +189,35 @@ feishu-agent-bridge/
 │   ├── feishu/                  # Feishu bot module
 │   │   ├── bot.py               # Feishu API integration
 │   │   ├── lark_client.py       # Lark SDK client
+│   │   ├── message_handler.py   # Message parsing for session commands
 │   │   └── websocket_client.py  # WebSocket client
 │   ├── agent/                   # Agent adapters
 │   │   ├── base.py              # Agent base class
 │   │   ├── claude_code.py       # Claude Code adapter
 │   │   ├── opencode.py          # OpenCode adapter
+│   │   ├── command_agent.py     # Generic template-driven agent
+│   │   ├── template_registry.py # Template registry with variable expansion
 │   │   └── output_filter.py     # Output filter
+│   ├── session/                 # Session management
+│   │   ├── manager.py           # Per-user session pool manager
+│   │   └── models.py           # Session data models
 │   ├── terminal/                # Terminal management
 │   │   └── pty_manager.py       # PTY process manager
 │   ├── monitor/                 # Monitoring module
 │   │   └── status_monitor.py    # Status monitor
 │   ├── storage/                 # Storage module
-│   │   └── chat_store.py        # Chat history storage
+│   │   └── chat_store.py        # Chat history and session record storage
 │   └── utils/                   # Utility module
 │       └── logger.py            # Logger utility
 ├── web/
 │   └── dashboard.html           # Web dashboard
+├── tests/                       # Test suite
+│   ├── agent/                   # Agent tests
+│   ├── feishu/                 # Feishu module tests
+│   ├── session/                # Session tests
+│   └── service/                # Service integration tests
 ├── logs/                        # Log directory
-├── data/                        # Data directory
+├── data/                        # Data directory (chat logs, session records)
 ├── requirements.txt             # Python dependencies
 └── README.md                    # Project documentation
 ```
@@ -319,6 +346,7 @@ Issues and Pull Requests are welcome!
 - 📱 **Web 仪表板** - 实时查看聊天记录和统计
 - 💾 **聊天记录存储** - 自动保存所有对话历史
 - 🔌 **双连接模式** - WebSocket（长连接）或 Webhook 回调
+- 🏢 **多会话支持** - 每个用户可同时运行多个独立会话，使用不同模板
 
 ### 架构设计
 
@@ -446,11 +474,26 @@ start.bat
 
 #### 系统命令
 
-- `/status` - 查看 Agent 状态
-- `/switch` - 切换 Agent（Claude Code ↔ OpenCode）
-- `/restart` - 重启当前 Agent
+**会话命令：**
+- `/session new <模板> <路径> [名称]` - 创建新会话
+- `/session list` - 列出会话
+- `/session use <会话ID>` - 切换活动会话
+- `/session info <会话ID>` - 查看会话详情
+- `/session stop <会话ID>` - 停止会话
+- `/session restart <会话ID>` - 重启会话
+- `/session rm <会话ID>` - 删除会话
+
+**模板命令：**
+- `/template list` - 列出可用模板
+- `/template show <名称>` - 查看模板详情
+
+**通用命令：**
+- `/status` - 查看状态
 - `/stop` - 停止服务
 - `/help` - 显示帮助信息
+
+**定向消息：**
+- `@sid:<会话ID> <消息>` - 向指定会话发送消息（跳过活动会话）
 
 #### Web 仪表板
 
