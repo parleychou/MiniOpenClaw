@@ -273,7 +273,8 @@ class AgentBridgeService:
             # Default values
             default_template = "claude_code"
             import os
-            default_work_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            # Use a sensible default work dir
+            default_work_dir = "E:/2026"
             import time
             default_session_name = f"session_{int(time.time())}"
 
